@@ -1,20 +1,56 @@
 package publish
 
 import (
-	"fmt"
+	"bytes"
+	"encoding/json"
 	"log"
+	"math/rand"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
-func ping(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("Hello!")
-
+type message struct {
+	Id   int    `json:"Id"`
+	Data string `json:"data"`
 }
 
-func startPubNode() {
-	http.HandleFunc("/ping", ping)
+func ping(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"Message": "Pong",
+	})
+}
 
-	err := http.ListenAndServe(":3000", nil)
+func publish(c *gin.Context) {
+	var req message
+	req.Id = rand.Int()
+	req.Data = c.Param("data")
+	reqJson, _ := json.Marshal(req)
+	resp := bytes.NewBuffer(reqJson)
+	_, err := http.Post("http://localhost:3003/queue", "application/json", resp)
+	if err != nil {
+		log.Println(err)
+	}
+	c.JSON(http.StatusOK, string(reqJson))
+}
+
+func test(c *gin.Context) {
+	var req message
+	req.Id = rand.Int()
+	req.Data = c.Param("data")
+	reqJson, _ := json.Marshal(req)
+	c.JSON(http.StatusOK, string(reqJson))
+}
+
+func StartPubNode() {
+	r := gin.Default()
+	r.GET("/ping", ping)
+	r.POST("/publish/:data", publish)
+	r.GET("/publish/:data", test)
+
+	log.Println("Publish is running on port 3000")
+
+	err := r.Run(":3000")
 	if err != nil {
 		log.Fatal(err)
 	}
