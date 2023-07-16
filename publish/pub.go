@@ -23,11 +23,18 @@ func ping(c *gin.Context) {
 
 func publish(c *gin.Context) {
 	var req message
-	req.Id = rand.Int()
-	req.Data = c.Param("data")
+
+	if err := c.BindJSON(&req); err != nil {
+		return
+	}
+
+	log.Println("This is pub node sending:", req.Data)
+
 	reqJson, _ := json.Marshal(req)
 	resp := bytes.NewBuffer(reqJson)
+
 	_, err := http.Post("http://localhost:3003/queue", "application/json", resp)
+
 	if err != nil {
 		log.Println(err)
 	}
@@ -45,7 +52,7 @@ func test(c *gin.Context) {
 func StartPubNode() {
 	r := gin.Default()
 	r.GET("/ping", ping)
-	r.POST("/publish/:data", publish)
+	r.POST("/publish", publish)
 	r.GET("/publish/:data", test)
 
 	log.Println("Publish is running on port 3000")

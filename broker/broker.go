@@ -24,7 +24,7 @@ func handlePublish(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, ":(")
 		return
 	}
-	log.Println(data.Data)
+	log.Println("This is broker speaking.", data.Data, "was recv.")
 	c.JSON(http.StatusOK, "It worked")
 
 }
