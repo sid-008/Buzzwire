@@ -5,23 +5,37 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
 )
 
-func ping(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello from sub node!")
+type message struct {
+	Topic string `json:"topic"`
+	Data  string `json:"data"`
 }
 
-func display(w http.ResponseWriter, r *http.Request) {
+func ping(c *gin.Context) {
+	fmt.Println("Hello from sub node!")
+}
 
+func display(c *gin.Context) {
+	var data message
+
+	if err := c.BindJSON(&data); err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
+	log.Println("This is subscriber speaking!", data.Data, "was recv. on topic ", data.Topic)
+	c.JSON(http.StatusOK, "Ack")
 }
 
 func StartPubNode() {
-	r := mux.NewRouter()
-	r.HandleFunc("/ping", ping)
+	r := gin.Default()
+	r.GET("/ping", ping)
+	r.POST("/sub", display)
 
 	log.Println("Subscribe is running on port 3001")
-	err := http.ListenAndServe(":3001", r)
+	err := r.Run(":3001")
 	if err != nil {
 		log.Fatal(err)
 	}

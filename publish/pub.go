@@ -4,15 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"log"
-	"math/rand"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
 type message struct {
-	Id   int    `json:"Id"`
-	Data string `json:"data"`
+	Topic string `json:"topic"`
+	Data  string `json:"data"`
 }
 
 func ping(c *gin.Context) {
@@ -25,10 +24,11 @@ func publish(c *gin.Context) {
 	var req message
 
 	if err := c.BindJSON(&req); err != nil {
+		log.Println(err)
 		return
 	}
 
-	log.Println("This is pub node sending:", req.Data)
+	log.Println("This is pub node sending:", req.Data, " to topic ", req.Topic)
 
 	reqJson, _ := json.Marshal(req)
 	resp := bytes.NewBuffer(reqJson)
@@ -41,19 +41,10 @@ func publish(c *gin.Context) {
 	c.JSON(http.StatusOK, string(reqJson))
 }
 
-func test(c *gin.Context) {
-	var req message
-	req.Id = rand.Int()
-	req.Data = c.Param("data")
-	reqJson, _ := json.Marshal(req)
-	c.JSON(http.StatusOK, string(reqJson))
-}
-
 func StartPubNode() {
 	r := gin.Default()
 	r.GET("/ping", ping)
 	r.POST("/publish", publish)
-	r.GET("/publish/:data", test)
 
 	log.Println("Publish is running on port 3000")
 

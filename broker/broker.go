@@ -1,6 +1,8 @@
 package broker
 
 import (
+	"bytes"
+	"encoding/json"
 	"log"
 	"net/http"
 
@@ -8,8 +10,8 @@ import (
 )
 
 type message struct {
-	Id   int    `json:"Id"`
-	Data string `json:"data"`
+	Topic string `json:"topic"`
+	Data  string `json:"data"`
 }
 
 func handlePublish(c *gin.Context) {
@@ -21,6 +23,15 @@ func handlePublish(c *gin.Context) {
 	}
 	log.Println("This is broker speaking.", data.Data, "was recv.")
 	// storeEnqueue(data)
+
+	reqJson, _ := json.Marshal(data)
+	resp := bytes.NewBuffer(reqJson)
+
+	_, err := http.Post("http://localhost:3001/sub", "application/json", resp)
+
+	if err != nil {
+		log.Println(err)
+	}
 	c.JSON(http.StatusOK, "It worked")
 }
 
