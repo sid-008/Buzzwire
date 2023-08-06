@@ -1,3 +1,3 @@
 # PubSub
 
-Point to point(for now) pub-sub messaging queue. Work in progress.
+Point to point/Single node(for now) pub-sub messaging queue.
